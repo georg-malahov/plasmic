@@ -375,7 +375,7 @@ export const genericFetcherStates: ComponentMeta<GenericFetcherProps>["states"] 
 
 type SWRHooksProps = {
   key: string;
-  fetcher: () => Promise<any>;
+  fetcher: (key: string, { arg }: { arg: any }) => Promise<any>;
   config: FetcherOptions;
   disabled?: boolean;
   useMutation?: boolean;
@@ -414,7 +414,7 @@ function useSWRHooks({
   // See: https://github.com/vercel/swr/issues/1832#issuecomment-1354106993
   const { data, error, isLoading, isValidating, mutate } = useMutablePlasmicQueryData(
     !disabled && !useMutation ? key : null,
-    fetcher,
+    fetcher as any,
     config as any
   );
 
@@ -610,7 +610,9 @@ export function DataFetcher(props: DataFetcherProps) {
   const key =
     queryKey || JSON.stringify({ type: "DataFetcher", ...fetchProps });
 
-  const fetcher = () => performFetch(fetchProps);
+  // Allow to pass custom body for mutation when using trigger function
+  const fetcher = (_: string, { arg: mutationBody }: { arg: any }) =>
+    performFetch({ ...fetchProps, ...(useMutation && mutationBody ? { body: mutationBody } : {}) });
 
   const config = getFetcherOptions(props);
 
